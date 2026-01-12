@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>For You</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html { height: 100%; width: 100%; overflow: hidden; font-family: 'Montserrat', sans-serif; background: #ffccd5; }
+
+        #scene {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(to top, #ff758f, #ffccd5);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            transition: all 2.5s ease-in-out;
+        }
+
+        .tree-container {
+            position: relative;
+            width: 90%;
+            max-width: 500px;
+            height: 70vh;
+            display: flex;
+            justify-content: center;
+            transition: all 2s ease-in-out;
+            z-index: 5;
+            opacity: 0;
+            margin-bottom: 20px;
+        }
+
+        .trunk {
+            position: absolute;
+            bottom: 0;
+            width: 20px;
+            height: 30%;
+            background: linear-gradient(to right, #3e2723, #5d4037);
+            border-top-left-radius: 50%;
+            border-top-right-radius: 50%;
+        }
+
+        .canopy {
+            position: absolute;
+            bottom: 25%;
+            width: 100%;
+            height: 70%;
+        }
+
+        .leaf-cluster {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(2px);
+            opacity: 0.7;
+            animation: sway 4s ease-in-out infinite alternate;
+        }
+
+        .special-circle {
+            position: absolute;
+            background-color: #fff !important;
+            color: #c9184a !important;
+            box-shadow: 0 0 30px white;
+            z-index: 100;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-family: 'Dancing Script', cursive;
+            animation: float 3s ease-in-out infinite !important;
+            border: 2px solid #ff758f;
+            border-radius: 50%;
+            padding: 15px;
+            line-height: 1.2;
+            opacity: 1 !important;
+            width: 180px;
+            height: 180px;
+            font-size: 1.3rem;
+        }
+
+        @media (max-width: 600px) {
+            .special-circle {
+                width: 145px;
+                height: 145px;
+                font-size: 1.1rem;
+                padding: 10px;
+            }
+            .tree-container { height: 60vh; }
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+        @keyframes smoke { 0% { filter: blur(0px); opacity: 1; transform: scale(1); } 100% { filter: blur(40px); opacity: 0; transform: scale(1.5); } }
+        .smoke-out { animation: smoke 1.5s forwards; }
+
+        #ui-layer {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            padding: 20px;
+        }
+
+        .main-text {
+            font-family: 'Dancing Script', cursive;
+            color: #fff;
+            text-shadow: 0 5px 20px rgba(201, 24, 74, 0.4);
+            font-size: clamp(2rem, 8vw, 4.5rem);
+            max-width: 800px;
+        }
+
+        .final-text { font-family: 'Dancing Script', cursive; color: #fff; line-height: 1.2; }
+        .final-small { font-family: 'Montserrat', sans-serif; font-size: clamp(1rem, 4vw, 1.5rem); font-weight: 300; letter-spacing: 2px; }
+        .final-big { font-size: clamp(2.5rem, 10vw, 5.5rem); display: block; margin-top: 10px; }
+        .tap-hint { font-family: 'Montserrat', sans-serif; font-size: 0.7rem; letter-spacing: 4px; text-transform: uppercase; color: #c9184a; margin-top: 30px; animation: pulse 2s infinite; font-weight: 600; }
+
+        @keyframes sway { from { transform: translateX(-5px); } to { transform: translateX(5px); } }
+        @keyframes pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+    </style>
+</head>
+<body onclick="progressJourney()">
+
+   <audio id="bg-song" loop>
+    <source src="music.mp3" type="audio/mp3">
+</audio>
+
+    <div id="ui-layer">
+        <div id="text-wrap" class="main-text">
+            <div id="step-content">
+                Happy Birthday <span style="color: #c9184a;">  </span>
+                <div class="tap-hint">Tap to begin</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="scene">
+        <div class="tree-container" id="tree-container">
+            <div class="trunk"></div>
+            <div class="canopy" id="canopy"></div>
+        </div>
+    </div>
+
+    <script>
+        let step = 0;
+        const textWrap = document.getElementById('text-wrap');
+        const treeContainer = document.getElementById('tree-container');
+        const canopy = document.getElementById('canopy');
+        const song = document.getElementById('bg-song');
+
+        for (let i = 0; i < 40; i++) {
+            const leaf = document.createElement('div');
+            leaf.className = 'leaf-cluster';
+            const size = Math.random() * 60 + 60;
+            leaf.style.width = size + 'px';
+            leaf.style.height = size + 'px';
+            leaf.style.backgroundColor = ['#ff4d6d', '#ff758f', '#ffb3c1', '#c9184a'][Math.floor(Math.random() * 4)];
+            leaf.style.left = Math.random() * 85 + '%';
+            leaf.style.top = Math.random() * 80 + '%';
+            canopy.appendChild(leaf);
+        }
+
+        function progressJourney() {
+            step++;
+            if (step === 1) {
+                song.play().catch(() => {});
+                textWrap.classList.add('smoke-out');
+                setTimeout(() => {
+                    textWrap.classList.remove('smoke-out');
+                    textWrap.innerHTML = "To the one whose existence makes this world a better place...";
+                    treeContainer.style.opacity = "1";
+                }, 1200);
+            } 
+            else if (step === 2) {
+                textWrap.classList.add('smoke-out');
+                const positions = [{t: '5%', l: '2%'}, {t: '0%', l: '60%'}, {t: '35%', l: '30%'}, {t: '65%', l: '-5%'}, {t: '70%', l: '60%'}];
+                const treeWords = [
+                    "Talking to you has been the nicest part of my days lately.",
+                    "There's no doubt how effortlessly special you are.",
+                    "I hope you get everything you deserve and yess you deserve it.",
+                    "And this is just a reminder that you matter, a lot.",
+                    "I don't know how you do so but your calm nature is something i admire."
+                ]; 
+                setTimeout(() => {
+                    textWrap.innerHTML = ""; 
+                    treeWords.forEach((word, i) => {
+                        const circle = document.createElement('div');
+                        circle.className = 'special-circle';
+                        circle.innerHTML = word;
+                        circle.style.top = positions[i].t;
+                        circle.style.left = positions[i].l;
+                        canopy.appendChild(circle);
+                    });
+                }, 800);
+            }
+            else if (step === 3) {
+                treeContainer.classList.add('smoke-out');
+                textWrap.classList.add('smoke-out');
+                setTimeout(() => {
+                    treeContainer.style.display = 'none';
+                    textWrap.classList.remove('smoke-out');
+                    textWrap.innerHTML = `
+                        <div class="final-text">
+                            <span class="final-small">once again</span>
+                            <span class="final-big">Happy Birthday <br> Sumedha✨</span>
+                        </div>
+                    `;
+                }, 1500);
+            }
+        }
+    </script>
+</body>
+</html>
